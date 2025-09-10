@@ -76,7 +76,7 @@ class CountryListCreateView(generics.ListCreateAPIView):
     serializer_class = CountrySerializer
         
     def get_queryset(self):
-        return CountryModel.objects.filter(my_user=self.request.user)
+        return CountryModel.objects.all()
     
     def perform_create(self, serializer):
         serializer.save(my_user=self.request.user)
@@ -89,7 +89,7 @@ class CountryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'country_code'
     
     def get_queryset(self):
-        return CountryModel.objects.filter(my_user=self.request.user)
+        return CountryModel.objects.all()
 
 class StateListCreateView(generics.ListCreateAPIView):
     authentication_classes = [authentication.TokenAuthentication]
@@ -98,7 +98,7 @@ class StateListCreateView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         country_code = self.kwargs.get('country_code')
-        return StateModel.objects.filter(country__country_code=country_code, country__my_user=self.request.user)
+        return StateModel.objects.filter(country__country_code=country_code)
     
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -114,7 +114,7 @@ class StateRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     
     def get_queryset(self):
         country_code = self.kwargs.get('country_code')
-        return StateModel.objects.filter(country__country_code=country_code, country__my_user=self.request.user)
+        return StateModel.objects.filter(country__country_code=country_code)
 
 class CityListCreateView(generics.ListCreateAPIView):
     authentication_classes = [authentication.TokenAuthentication]
@@ -126,8 +126,7 @@ class CityListCreateView(generics.ListCreateAPIView):
         state_code = self.kwargs.get('state_code')
         return CityModel.objects.filter(
             state__state_code=state_code, 
-            state__country__country_code=country_code,
-            state__country__my_user=self.request.user
+            state__country__country_code=country_code
         )
 
 class CityRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -141,8 +140,7 @@ class CityRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         state_code = self.kwargs.get('state_code')
         return CityModel.objects.filter(
             state__state_code=state_code, 
-            state__country__country_code=country_code,
-            state__country__my_user=self.request.user
+            state__country__country_code=country_code
         )
 
 
