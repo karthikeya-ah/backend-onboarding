@@ -1,66 +1,38 @@
-from django.urls import path, include
-from .views import CountryViewSet, StateViewSet, CityViewSet
+from django.urls import path
+from .views import (
+    CustomObtainAuthToken, SignOutView, UserListView, UserCreateView, UserRetrieveUpdateDestroyView,
+    CountryListCreateView, CountryRetrieveUpdateDestroyView,
+    StateListCreateView, StateRetrieveUpdateDestroyView,
+    CityListCreateView, CityRetrieveUpdateDestroyView,
+    NestedCountryListCreateView, NestedCountryRetrieveUpdateDestroyView
+)
 from django.urls import path
 
 app_name = 'ex1'
 
-country_list = CountryViewSet.as_view({
-	'get': 'list',
-	'post': 'create',
-})
-country_detail = CountryViewSet.as_view({
-	'get': 'retrieve',
-})
-country_bulk_insert = CountryViewSet.as_view({
-	'post': 'bulk_insert',
-})
-country_bulk_update = CountryViewSet.as_view({
-	'put': 'bulk_update',
-})
-
-state_list = StateViewSet.as_view({
-	'get': 'list',
-	'post': 'create',
-})
-state_detail = StateViewSet.as_view({
-	'get': 'retrieve',
-})
-state_bulk_insert = StateViewSet.as_view({
-	'post': 'bulk_insert',
-})
-state_bulk_update = StateViewSet.as_view({
-	'put': 'bulk_update',
-})
-
-city_list = CityViewSet.as_view({
-	'get': 'list',
-	'post': 'create',
-})
-city_detail = CityViewSet.as_view({
-	'get': 'retrieve',
-})
-
-city_list_in_country = CityViewSet.as_view({
-	'get': 'list_cities_in_country',
-})
-city_list_in_country_with_population_filter = CityViewSet.as_view({
-	'get': 'list_cities_in_country_with_population_filter',
-})
-
 urlpatterns = [
-	path('countries/', country_list, name='country-list'),
-	path('countries/<str:country_code>/', country_detail, name='country-detail'),
-	path('countries/bulk_insert', country_bulk_insert, name='country-bulk-insert'),
-	path('countries/bulk_update/', country_bulk_update, name='country-bulk-update'),
+    # auth
+    path('auth/signin/', CustomObtainAuthToken.as_view(), name='auth-signin'),
+    path('auth/signout/', SignOutView.as_view(), name='auth-signout'),
+    
+    # user
+    path('users/', UserListView.as_view(), name='user-list'),
+    path('users/create/', UserCreateView.as_view(), name='user-create'),
+    path('users/<uuid:id>/', UserRetrieveUpdateDestroyView.as_view(), name='user-retrieve-update-destroy'),
 
-	path('countries/<str:country_code>/states/', state_list, name='state-list'),
-	path('countries/<str:country_code>/states/bulk_insert/', state_bulk_insert, name='state-bulk-insert'),
-	path('countries/<str:country_code>/states/bulk_update/', state_bulk_update, name='state-bulk-update'),
-	path('countries/<str:country_code>/states/<str:state_code>/', state_detail, name='state-detail'),
+    # nested country-state-city
+    path('nested/countries/', NestedCountryListCreateView.as_view(), name='nested-country-list-create'),
+    path('nested/countries/<str:country_code>/', NestedCountryRetrieveUpdateDestroyView.as_view(), name='nested-country-retrieve-update-destroy'),
 
-	path('countries/<str:country_code>/states/<str:state_code>/cities/', city_list, name='city-list'),
-	path('countries/<str:country_code>/states/<str:state_code>/cities/<str:city_code>/', city_detail, name='city-detail'),
+    # Individual entity endpoints
+    path('countries/', CountryListCreateView.as_view(), name='country-list-create'),
+    path('countries/<str:country_code>/', CountryRetrieveUpdateDestroyView.as_view(), name='country-retrieve-update-destroy'),
 
-	path('countries/<str:country_code>/cities/', city_list_in_country, name='city-list-in-country'),
-	path('countries/<str:country_code>/cities/filter/', city_list_in_country_with_population_filter, name='city-list-in-country-with-population-filter'),
+    # state
+    path('countries/<str:country_code>/states/', StateListCreateView.as_view(), name='state-list-create'),
+    path('countries/<str:country_code>/states/<str:state_code>/', StateRetrieveUpdateDestroyView.as_view(), name='state-retrieve-update-destroy'),
+
+    # city
+    path('countries/<str:country_code>/states/<str:state_code>/cities/', CityListCreateView.as_view(), name='city-list-create'),
+    path('countries/<str:country_code>/states/<str:state_code>/cities/<str:city_code>/', CityRetrieveUpdateDestroyView.as_view(), name='city-retrieve-update-destroy'),
 ]

@@ -1,3 +1,15 @@
+# models are basically db relations as python ORM classes
+# can consider sql but on steroids
+# Various type of fields - CharField, IntegerField, FloatField, DateTimeField, ForeignKey, ManyToManyField, OneToOneField
+# Various type of field options - max_length, unique, blank, null, default, choices
+# ForeignKey - on_delete options - CASCADE, SET_NULL, PROTECT, SET_DEFAULT
+# ManyToManyField - related_name option to access reverse relation
+# OneToOneField - similar to ForeignKey with unique constraint
+
+# There are also some default django models for auth, permissions, groups etc
+# Some are BaseUserManager, AbstractBaseUser, PermissionsMixin mainly for custom user
+# For default user model, can use from django.contrib.auth.models import User
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.conf import settings
@@ -14,6 +26,7 @@ class CustomUserManager(BaseUserManager):
         return user
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
 
     USERNAME_FIELD = 'email'
@@ -42,11 +55,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class CountryModel(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, auto_created=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     country_code = models.CharField(max_length=10, unique=True)
     curr_symbol = models.CharField(max_length=1)
-    phone_code = models.CharField(max_length=10)
+    phone_code = models.CharField(max_length=10, unique=True)
     my_user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, related_name='countries', null=True, on_delete=models.SET_NULL)
     
     """
@@ -67,11 +80,11 @@ class CountryModel(models.Model):
         return self.name
 
 class StateModel(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
-    gst_code = models.CharField(max_length=20, blank=True, null=True)
+    gst_code = models.CharField(max_length=20, blank=True, null=True, unique=True)
     state_code = models.CharField(max_length=10, unique=True)
-    country = models.ForeignKey(CountryModel, on_delete=models.CASCADE, related_name='country')
+    country = models.ForeignKey(CountryModel, on_delete=models.CASCADE, related_name='states')
     
     class Meta: 
         unique_together = ['name', 'country']
@@ -80,18 +93,23 @@ class StateModel(models.Model):
         return self.name
 
 class CityModel(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     city_code = models.CharField(max_length=10, unique=True)
-    phone_code = models.CharField(max_length=10)
+    phone_code = models.CharField(max_length=10, unique=True)
     population = models.IntegerField()
     avg_age = models.FloatField()
     num_of_adults_males = models.PositiveBigIntegerField()
     num_of_adults_females = models.PositiveBigIntegerField()
-    state = models.ForeignKey(StateModel, on_delete=models.CASCADE, related_name='state')
+    state = models.ForeignKey(StateModel, on_delete=models.CASCADE, related_name='cities')
     
     class Meta:
         unique_together = ['name', 'state']
+        
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.population <= (self.num_of_adults_males + self.num_of_adults_females):
+            raise ValidationError('Population must be greater than the sum of adult males and females.')
         
     def __str__(self):
         return self.name

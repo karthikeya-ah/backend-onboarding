@@ -13,11 +13,15 @@ def assign_users(apps, schema_editor):
         country.my_user = random.choice(users)
         country.save()
 
+def clear_user_assignments(apps, schema_editor):
+    Country = apps.get_model("ex1", "CountryModel")
+    Country.objects.update(my_user=None)
+
 class Migration(migrations.Migration):
     dependencies = [
         ('ex1', '0003_create_users'),
     ]
 
     operations = [
-        migrations.RunPython(assign_users),
+        migrations.RunPython(assign_users, clear_user_assignments),
     ]

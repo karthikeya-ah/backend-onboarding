@@ -1,5 +1,6 @@
 from django.db import migrations
 from django.contrib.auth.hashers import make_password
+import uuid
 
 def create_users(apps, schema_editor):
     User = apps.get_model("ex1", "CustomUser")
@@ -13,7 +14,15 @@ def create_users(apps, schema_editor):
     ]
 
     for u in users:
-        User.objects.create(email=u["email"], password=make_password(u["password"]))
+        User.objects.create(
+            id=uuid.uuid4(),
+            email=u["email"], 
+            password=make_password(u["password"])
+        )
+
+def clear_users(apps, schema_editor):
+    User = apps.get_model("ex1", "CustomUser")
+    User.objects.all().delete()
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -21,5 +30,5 @@ class Migration(migrations.Migration):
     ]
    
     operations = [
-        migrations.RunPython(create_users),
+        migrations.RunPython(create_users, clear_users),
     ]
